@@ -3,7 +3,7 @@ let map;
 
 const regions = {
   ontario: {coord: [44.468994, -78.150035], oneBed: 'value', twoBed: 'value', color:'value'},
-  bColumbia: {coord: [50.212122, -121.980777], oneBed: 'value', twoBed: 'value', color:'value'},
+  bColumbia: {coord: [49.396733, -123.419986], oneBed: 'value', twoBed: 'value', color:'value'},
   //nWTerritories: {coord: 'value', oneBed: 'value', twoBed: 'value', color:'value'},
   alberta: {coord: [52.203687, -113.643362], oneBed: 'value', twoBed: 'value', color:'value'},
   manitoba: {coord: [50.272672, -98.293368], oneBed: 'value', twoBed: 'value', color:'value'},
