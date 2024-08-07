@@ -1,4 +1,9 @@
+body{
+    padding: 0px;
+    margin: 0;
+}
 #map {
-    height: 50vh; /* The height is 400 pixels */
+    height: 100vh; /* The height is 400 pixels */
     width: 100%; /* The width is the width of the web page */
+    overflow: hidden;
 }
