@@ -16,31 +16,14 @@ async function initMap() {
     
   });
 
-  // The marker, positioned at Uluru
-  const marker = new AdvancedMarkerElement({
-    map: map,
-    position: position,
-    title: "Canada",
-  });
-
-
   map.data.loadGeoJson(
-    "./geojson/canada.geojson"
+    "./maps/canada.geojson"
   )
-
-  for(let i in map.data){
-    console.log(i)
-  }
-
-  map.data.forEach(area => {
-    map.data.overrideStyle(area, {strokeColor: 'green'})
-  });
 
   map.data.setStyle({
     clickable: true,
     strokeColor: 'white'
   });
-
 
   map.data.addListener('mouseover', function(event) {
     const selection = event.feature.getProperty("name");
@@ -48,6 +31,12 @@ async function initMap() {
     map.data.revertStyle();
     map.data.overrideStyle(event.feature, {fillColor: 'yellow'});
   });
+
+  map.data.addListener('addfeature', function(event) {
+    console.log('Feature added:', event.feature.getProperty('name'));
+    event.feature.getProperty('name') == 'Ontario' ? map.data.overrideStyle(event.feature, {strokeColor: 'red'}) : false;
+});
+
   
   map.data.addListener('click', (event) => {
     const selection = event.feature.getProperty("name")
