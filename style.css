@@ -7,3 +7,8 @@ body{
     width: 100%; /* The width is the width of the web page */
     overflow: hidden;
 }
+.info-div {
+    display: flex;
+    background-color: white;
+
+}

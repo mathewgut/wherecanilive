@@ -6,7 +6,7 @@ const regions = {
   //nWTerritories: {coord: 'value', oneBed: 'value', twoBed: 'value', color:'value'},
   alberta: {coord: [52.203687, -113.643362], oneBed: 'value', twoBed: 1986, color:'value', title: 'Alberta'},
   manitoba: {coord: [50.272672, -98.293368], oneBed: 'value', twoBed: 1781, color:'value', title: 'Manitoba'},
-  nScotia: {coord: [63.5467,-45.0778], oneBed: 'value', twoBed: 2670, color:'value', title: 'Nova Scotia'},
+  nScotia: {coord: [45.0778, -63.5467], oneBed: 'value', twoBed: 2670, color:'value', title: 'Nova Scotia'},
   sask: {coord: [50.538716, -104.938586], oneBed: 'value', twoBed: 1432, color:'value', title: 'Saskatchewan'},
   //PEI: {coord: 'value', oneBed: 'value', twoBed: 'value', color:'value'},
   quebec: {coord: [45.970168, -72.634898], oneBed: 'value', twoBed: 2159, color:'value', title: 'Quebec'},
