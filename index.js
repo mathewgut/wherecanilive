@@ -7,7 +7,7 @@ const regions = {
   alberta: {coord: [52.203687, -113.643362], oneBed: 'value', twoBed: 1986, color:'value', title: 'Alberta'},
   manitoba: {coord: [50.272672, -98.293368], oneBed: 'value', twoBed: 1781, color:'value', title: 'Manitoba'},
   nScotia: {coord: [45.0778, -63.5467], oneBed: 'value', twoBed: 2670, color:'value', title: 'Nova Scotia'},
-  sask: {coord: [50.538716, -104.938586], oneBed: 'value', twoBed: 1432, color:'value', title: 'Saskatchewan'},
+  sask: {coord: [51.118269, -105.579977], oneBed: 'value', twoBed: 1432, color:'value', title: 'Saskatchewan'},
   //PEI: {coord: 'value', oneBed: 'value', twoBed: 'value', color:'value'},
   quebec: {coord: [45.970168, -72.634898], oneBed: 'value', twoBed: 2159, color:'value', title: 'Quebec'},
 };
@@ -54,6 +54,9 @@ async function initMap() {
     center: position,
     mapId: "CANADA_MAP",
     zoomControl: false,
+    mapTypeControl: false,
+    streetViewControl: false,
+    fullscreenControl: true
   });
 
   map.data.loadGeoJson(
@@ -68,12 +71,12 @@ async function initMap() {
 
   map.data.addListener('mouseover', function(event) {
     const selection = event.feature.getProperty("name");
-    console.log('attributes: ', selection)
+    console.log('Selection:', selection)
 
     const areas = Object.entries(regions);
     areas.forEach((item,index)=>{
       item[1].title == event.feature.getProperty('name') ? map.data.overrideStyle(event.feature, {fillColor: item[1].color, fillOpacity: 0.3}) : false;
-      
+      console.log('item test', item[0])
     })
     
     map.data.addListener('mouseout', event => {
@@ -83,22 +86,15 @@ async function initMap() {
 
   map.data.addListener('addfeature', function(event) {
     // TODO: replace with a foreach method
-    console.log('Feature added:', event.feature.getProperty('name'));
-    event.feature.getProperty('name') == 'Ontario' ? map.data.overrideStyle(event.feature, {strokeColor:regions.ontario.color}) : false;
-    event.feature.getProperty('name') == 'Saskatchewan' ? map.data.overrideStyle(event.feature, {strokeColor:regions.sask.color}) : false;
-    event.feature.getProperty('name') == 'Manitoba' ? map.data.overrideStyle(event.feature, {strokeColor:regions.manitoba.color}) : false;
-    event.feature.getProperty('name') == 'Alberta' ? map.data.overrideStyle(event.feature, {strokeColor:regions.alberta.color}) : false;
-    event.feature.getProperty('name') == 'British Columbia' ? map.data.overrideStyle(event.feature, {strokeColor:regions.bColumbia.color}) : false;
-    event.feature.getProperty('name') == 'Quebec' ? map.data.overrideStyle(event.feature, {strokeColor:regions.quebec.color}) : false;
-    event.feature.getProperty('name') == 'Nova Scotia' ? map.data.overrideStyle(event.feature, {strokeColor:regions.nScotia.color}) : false;
-    if(event.feature.getProperty('name') == 'Northwest Territories' 
-    || event.feature.getProperty('name') == 'Newfoundland and Labrador' 
-    || event.feature.getProperty('name') == 'Nunavut'
-    || event.feature.getProperty('name') == 'New Brunswick'
-    || event.feature.getProperty('name') == 'Prince Edward Island'
-    || event.feature.getProperty('name') == 'Yukon Territory'){
-      map.data.overrideStyle(event.feature, {strokeOpacity: 0})
-    }
+    const area = Object.entries(regions);
+    area.forEach((item, index)=>{
+      item[1].title == event.feature.getProperty('name') ? map.data.overrideStyle(event.feature, {strokeColor: item[1].color}): false;
+      event.feature.getProperty ('name') == 'Northwest Territories' || event.feature.getProperty ('name') ==  'Newfoundland and Labrador' 
+      || event.feature.getProperty ('name') == 'Nunavut' || event.feature.getProperty ('name') == 'New Brunswick' 
+      || event.feature.getProperty ('name') == 'Prince Edward Island' || event.feature.getProperty ('name') == 'Yukon Territory' 
+      ? map.data.overrideStyle(event.feature, {strokeOpacity: 0}) : false;
+    })
+ 
   });
 
   // TODO: Replace with foreach method
