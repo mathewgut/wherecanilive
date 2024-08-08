@@ -53,7 +53,6 @@ async function initMap() {
     zoom: 4,
     center: position,
     mapId: "CANADA_MAP",
-    gestureHandling: "none",
     zoomControl: false,
   });
 
@@ -109,36 +108,54 @@ async function initMap() {
       case 'Ontario':
         map.setZoom(6.5)
         map.setCenter({lat: regions.ontario.coord[0], lng: regions.ontario.coord[1]});
+        currentRegion.textContent = `Current region: ${selection}`;
+        console.log(currentRegion.textContent)
         break;
       case 'British Columbia':
         map.setZoom(8)
         map.setCenter({lat: regions.bColumbia.coord[0], lng: regions.bColumbia.coord[1]});
+        currentRegion.textContent = `Current region: ${selection}`;
         break;
       case 'Alberta':
         map.setZoom(7)
         map.setCenter({lat: regions.alberta.coord[0], lng: regions.alberta.coord[1]});
+        currentRegion.textContent = `Current region: ${selection}`;
         break;
       case 'Quebec':
         map.setZoom(8)
         map.setCenter({lat: regions.quebec.coord[0], lng: regions.quebec.coord[1]});
+        currentRegion.textContent = `Current region: ${selection}`;
         break;
       case 'Saskatchewan':
         map.setZoom(8);
         map.setCenter({lat: regions.sask.coord[0], lng: regions.sask.coord[1]});
+        currentRegion.textContent = `Current region: ${selection}`;
         break;
       case 'Manitoba':
         map.setZoom(8);
         map.setCenter({lat: regions.manitoba.coord[0], lng: regions.manitoba.coord[1]});
+        currentRegion.textContent = `Current region: ${selection}`;
         break;
       case 'Nova Scotia':
         map.setZoom(8);
         map.setCenter({lat: regions.nScotia.coord[0], lng: regions.nScotia.coord[1]});
+        currentRegion.textContent = `Current region: ${selection}`;
       }
     
   })
   const areaInfo = document.createElement('div');
-  const areaLocation = ''
+  const defaultZoom = document.createElement('button');
+  const currentRegion = document.createElement('p');
+
+  defaultZoom.textContent = 'return to canada';
+
+  areaInfo.appendChild(defaultZoom);
+  areaInfo.appendChild(currentRegion);
   areaInfo.setAttribute('class','info-div');
+  defaultZoom.addEventListener('click', (event) => {
+    map.setCenter(position);
+    map.setZoom(4)
+  })
   
   map.controls[google.maps.ControlPosition.LEFT_TOP].push(areaInfo);
 }
