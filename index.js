@@ -110,7 +110,6 @@ async function initMap() {
   // set default styles for provinces
   map.data.setStyle({
     clickable: true,
-    strokeColor: 'white',
     fillOpacity: 0,
   });
 
@@ -230,7 +229,7 @@ async function initMap() {
         
       default:
         currentRegion.textContent = 'Canada';
-        map.setOptions({gestureHandling: 'auto'})
+        
     }
       
       //currentRegion.textContent = `Current region: ${selection}`;
@@ -254,7 +253,7 @@ async function initMap() {
   areaInfo.setAttribute('id', 'info-div')
   defaultZoom.addEventListener('click', (event) => {
     currentRegion.textContent = 'Current region: Canada'
-    
+    map.setOptions({gestureHandling: 'auto'})
     coordInfoWindow.setContent(currentRegion);
     map.setCenter(canadaDefault);
     map.setZoom(4);
