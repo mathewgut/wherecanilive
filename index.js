@@ -1,5 +1,6 @@
 let map;
 
+// equals true when zoomed on a region, equals false when zoomed out
 let regionZoom = false;
 
 // rinky dinky and super inefficent db
@@ -20,47 +21,72 @@ const regions = {
     cities: {montreal: {coord:[45.521425, -73.619292], oneBed: 1756, twoBed: 2295}, gatineau: {coord:[45.451650, -75.698136], oneBed: 1736, twoBed: 1937}}},
 };
 
+// basic sleep helper function
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
 
+// get cursor position in pixels
+function getCursor(event) {
+    let x = event.clientX;
+    let y = event.clientY;
+    let _position = `X: ${x}<br>Y: ${y}`;
+    console.log(_position)
+    /*
+    const infoElement = document.getElementById('info');
+    infoElement.innerHTML = _position;
+    infoElement.style.top = y + "px";
+    infoElement.style.left = (x + 20) + "px";
+    */
+    }
+
+// assign a colour value to each region based off rent cost
 const setRegionColor = (place = regions) => {
+  // make the object parsable
   const entries = Object.entries(place);
 
-  // Calculate the fraction value
+  // create fraction for how many items in colour range
   const fraction = 255 / entries.length;
 
-  // Sort entries based on `twoBed` value
+  // sort regions based on twobed price low to high
   entries.sort((a, b) => a[1].twoBed - b[1].twoBed);
 
-  // Iterate over the sorted entries and assign colors
-  entries.forEach((entry, index) => {
+  // assign a colour value to each region based on its average 2 bed cost
+  // blue == low, red == high
+  entries.forEach((item, index) => {
     const redValue = Math.round(fraction * index);
     const blueValue = 255 - Math.round(fraction * index);
-
-    // Ensure color values are within the 0-255 range
+    
     const clampedRed = Math.min(255, Math.max(0, redValue));
     const clampedBlue = Math.min(255, Math.max(0, blueValue));
 
-    // Update the color property
-    entry[1].color = `rgb(${clampedRed}, 0, ${clampedBlue})`;
+    item[1].color = `rgb(${clampedRed}, 0, ${clampedBlue})`;
   });
-
-  // Convert sorted entries back to an object
-  const sortedRegions = Object.fromEntries(entries);
-
-  return sortedRegions;
+  
+ 
 };
 
 setRegionColor()
 
+function createPosition (x,y){
+  return { lat: x, lng: y }
+}
 
+// async map function, is called based on map events
 async function initMap() {
-  // The location of Uluru
-  const position = { lat: 56.1304, lng: -106.3468 };
+  
+  // default position on load
+  const canadaDefault = { lat: 56.1304, lng: -106.3468 };
+  
+  // library import declarations
   const { Map } = await google.maps.importLibrary("maps");
   const { AdvancedMarkerElement } = await google.maps.importLibrary("marker");
 
+
+  //map setup
   map = new Map(document.getElementById("map"), {
     zoom: 4,
-    center: position,
+    center: canadaDefault,
     mapId: "CANADA_MAP",
     zoomControl: false,
     mapTypeControl: false,
@@ -68,71 +94,70 @@ async function initMap() {
     fullscreenControl: true,
     scaleControl: true,
   });
+  
+  let markerCoord = (lat=56.1304, lng=-106.3468) => new google.maps.LatLng(lat, lng);
+  
+  const coordInfoWindow = new google.maps.InfoWindow();
+  coordInfoWindow.setPosition(canadaDefault);
+  coordInfoWindow.open(map);
+  
 
+  // provincial geojson load
   map.data.loadGeoJson(
     "./maps/canada.geojson"
   )
 
+  // set default styles for provinces
   map.data.setStyle({
     clickable: true,
     strokeColor: 'white',
     fillOpacity: 0,
   });
 
+  // set region line opacity to lower when zoomed,
+  // and increase while zoomed out
   google.maps.event.addListener(map,'zoom_changed',(event)=>{
-    
-    
-    regionZoom == false ? map.data.setOptions({gestureHandling: 'auto'}): map.data.setOptions({gestureHandling: 'none'});
     const zoomLevel = map.getZoom();
-        map.data.setStyle(feature => {
+        map.data.setStyle(() => {
           return {
             strokeOpacity: zoomLevel < 10 ? 0.4 : 0.7,
           };
-        });
-      });
-  
-  
+       });
+  });
+
+  // declartions for cursor following div box
+  const hoverInfo = document.createElement('div');
+  document.body.appendChild(hoverInfo);
+
+  // if mouse is on map
   map.data.addListener('mouseover', function(event) {
+    // store name if over a region (province)
     const selection = event.feature.getProperty("name");
     console.log('Selection:', selection)
+
+    // make object parsable
     const areas = Object.entries(regions);
     areas.forEach((item,index)=>{
+
       if(regionZoom == true){
+        // turn of region fill on hover if zoomed in
         return map.data.overrideStyle(event.feature, {fillOpacity: 0})
       }else{
-      item[1].title == event.feature.getProperty('name') ? map.data.overrideStyle(event.feature, {fillColor: item[1].color, fillOpacity: 0.3}) : false;
+        // if not zoomed in, make region fill the same colour as stroke
+        item[1].title == event.feature.getProperty('name') ? map.data.overrideStyle(event.feature, {fillColor: item[1].color, fillOpacity: 0.3}) : false;
       }
     }
   )
-  //const infoContainer = document.createElement('div');
-    map.data.addListener('mousemove', (e) => {
-      const projection = map.getProjection();
-      if (projection) {
-        // Get mouse position in pixels
-        const mousePosition = e.latLng; // This is the LatLng from the event
-
-        // Convert LatLng to pixel coordinates
-        const pixelPosition = projection.fromLatLngToPoint(mousePosition);
-        
-        // Convert pixel coordinates to LatLng coordinates
-        const latLng = projection.fromPointToLatLng(pixelPosition);
-
-        // Display coordinates
-        const regionInfo = document.createElement('div');
-        //console.log(`Latitude: ${latLng.lat().toFixed(6)}, Longitude: ${latLng.lng().toFixed(6)}`);
-        
-      }
-    });
   
 });
 
+  // turn off fill when mouse not over region
   map.data.addListener('mouseout', event => {
     map.data.overrideStyle(event.feature, {fillOpacity: 0})
   })
   
-
+// assign stroke colors for each region(feature) on load
   map.data.addListener('addfeature', function(event) {
-    // TODO: replace with a foreach method
     const area = Object.entries(regions);
     area.forEach((item, index)=>{
       item[1].title == event.feature.getProperty('name') ? map.data.overrideStyle(event.feature, {strokeColor: item[1].color}): false;
@@ -144,7 +169,8 @@ async function initMap() {
  
   });
 
- 
+ // over-complicated switch case for when a region(feature) is clicked
+ // for each region it will zoom in, set center, and update info text
   map.data.addListener('mouseup', (event) => {
     const selection = event.feature.getProperty("name")
     Object.entries(regions).forEach((item, index)=>{
@@ -153,7 +179,7 @@ async function initMap() {
       item[1].title == selection ? currentRegionInfo.textContent = cityCost: currentRegion.textcontent = 'Canada';})
     switch(selection){
       case 'Ontario':
-        map.setZoom(6.5)
+        map.setZoom(7)
         map.setCenter({lat: regions.ontario.coord[0], lng: regions.ontario.coord[1]});
         currentRegion.textContent = `Current region: ${selection}`;
         regionZoom = true;
@@ -198,32 +224,44 @@ async function initMap() {
         map.setZoom(8);
         map.setCenter({lat: regions.nScotia.coord[0], lng: regions.nScotia.coord[1]});
         map.setOptions({gestureHandling: 'none'})
+        currentRegion.textContent = `Current region: ${selection}`;
         regionZoom = true;
         break
-        }
-      currentRegion.textContent = `Current region: ${selection}`;
+        
+      default:
+        currentRegion.textContent = 'Canada';
+        map.setOptions({gestureHandling: 'auto'})
+    }
+      
+      //currentRegion.textContent = `Current region: ${selection}`;
       
 
     
   })
+
+  // supporting element creation
   const areaInfo = document.createElement('div');
   const defaultZoom = document.createElement('button');
   const currentRegion = document.createElement('p');
   const currentRegionInfo = document.createElement('p')
   currentRegion.textcontent = 'Current region: Canada'
   defaultZoom.textContent = 'return to canada';
-
+  
   areaInfo.appendChild(defaultZoom);
   areaInfo.appendChild(currentRegion);
   areaInfo.appendChild(currentRegionInfo)
   areaInfo.setAttribute('class','info-div');
   areaInfo.setAttribute('id', 'info-div')
   defaultZoom.addEventListener('click', (event) => {
-    //currentRegion.textContent = 'Current region: Canada'
-    map.setCenter(position);
+    currentRegion.textContent = 'Current region: Canada'
+    
+    coordInfoWindow.setContent(currentRegion);
+    map.setCenter(canadaDefault);
     map.setZoom(4);
     regionZoom = false;
     console.log('regionzoom: ', regionZoom)
+    currentRegion.textcontent = 'Canada';
+    currentRegionInfo.textContent = 'Average rent price: 2299'
   })
   
   map.controls[google.maps.ControlPosition.LEFT_TOP].push(areaInfo);
