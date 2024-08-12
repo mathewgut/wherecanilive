@@ -21,6 +21,20 @@ const regions = {
     cities: {montreal: {coord:[45.521425, -73.619292], oneBed: 1756, twoBed: 2295}, gatineau: {coord:[45.451650, -75.698136], oneBed: 1736, twoBed: 1937}}},
 };
 
+
+function regionFocus(name){
+  let regionObjects = Object.entries(regions);
+  regionObjects.forEach((item, index) => {
+    if(item[1].title == name){
+      map.setZoom(6)
+      map.setCenter({lat: item[1].coord[0], lng: item[1].coord[1]});
+      currentRegion.textContent = `Current region: ${name}`;
+      regionZoom = true;
+      map.setOptions({gestureHandling: 'none'})
+    }
+  })
+}
+
 // basic sleep helper function
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -68,8 +82,8 @@ const setRegionColor = (place = regions) => {
 
 setRegionColor()
 
-function createPosition (x,y){
-  return { lat: x, lng: y }
+function createPosition (coord){
+  return { lat: coord[0], lng: coord[1] }
 }
 
 // async map function, is called based on map events
@@ -176,61 +190,7 @@ async function initMap() {
       const cityCost = ` City: ${Object.keys(item[1].cities)[0]} onebed: ${Object.values(item[1].cities)[0].oneBed} two bed: ${Object.values(item[1].cities)[0].twoBed}`
       console.log('title: ',item[1].title,  currentRegion.textContent, 'info: ', cityCost)
       item[1].title == selection ? currentRegionInfo.textContent = cityCost: currentRegion.textcontent = 'Canada';})
-    switch(selection){
-      case 'Ontario':
-        map.setZoom(7)
-        map.setCenter({lat: regions.ontario.coord[0], lng: regions.ontario.coord[1]});
-        currentRegion.textContent = `Current region: ${selection}`;
-        regionZoom = true;
-        map.setOptions({gestureHandling: 'none'})
-        break;
-      case 'British Columbia':
-        map.setZoom(8)
-        map.setCenter({lat: regions.bColumbia.coord[0], lng: regions.bColumbia.coord[1]});
-        currentRegion.textContent = `Current region: ${selection}`;
-        map.setOptions({gestureHandling: 'none'})
-        regionZoom = true;
-        break;
-      case 'Alberta':
-        map.setZoom(7)
-        map.setCenter({lat: regions.alberta.coord[0], lng: regions.alberta.coord[1]});
-        currentRegion.textContent = `Current region: ${selection}`;
-        map.setOptions({gestureHandling: 'none'})
-        regionZoom = true;
-        break;
-      case 'Quebec':
-        map.setZoom(8)
-        map.setCenter({lat: regions.quebec.coord[0], lng: regions.quebec.coord[1]});
-        currentRegion.textContent = `Current region: ${selection}`;
-        map.setOptions({gestureHandling: 'none'})
-        regionZoom = true;
-        break;
-      case 'Saskatchewan':
-        map.setZoom(8);
-        map.setCenter({lat: regions.sask.coord[0], lng: regions.sask.coord[1]});
-        currentRegion.textContent = `Current region: ${selection}`;
-        map.setOptions({gestureHandling: 'none'})
-        regionZoom = true;
-        break;
-      case 'Manitoba':
-        map.setZoom(8);
-        map.setCenter({lat: regions.manitoba.coord[0], lng: regions.manitoba.coord[1]});
-        currentRegion.textContent = `Current region: ${selection}`;
-        map.setOptions({gestureHandling: 'none'})
-        regionZoom = true;
-        break;
-      case 'Nova Scotia':
-        map.setZoom(8);
-        map.setCenter({lat: regions.nScotia.coord[0], lng: regions.nScotia.coord[1]});
-        map.setOptions({gestureHandling: 'none'})
-        currentRegion.textContent = `Current region: ${selection}`;
-        regionZoom = true;
-        break
-        
-      default:
-        currentRegion.textContent = 'Canada';
-        
-    }
+      regionFocus(selection);
       
       //currentRegion.textContent = `Current region: ${selection}`;
       
@@ -245,25 +205,41 @@ async function initMap() {
   const currentRegionInfo = document.createElement('p')
   currentRegion.textcontent = 'Current region: Canada'
   defaultZoom.textContent = 'return to canada';
-  
+
+  //interface ui
+  const interfaceContainer = document.createElement('div');
+  interfaceContainer.setAttribute('id','interface');
+
+  // create left navigate button
+  const navigateLeft = document.createElement('p');
+  navigateLeft.setAttribute('id','nav-left');
+  navigateLeft.textContent = '<-';
+  interfaceContainer.appendChild(navigateLeft);
+
+  interfaceContainer.appendChild(areaInfo);
+
+  // create right navigate button
+  const navigateRight = document.createElement('p');
+  navigateRight.setAttribute('id','nav-right');
+  navigateRight.textContent = '->';
+  interfaceContainer.appendChild(navigateRight);
+
   areaInfo.appendChild(defaultZoom);
   areaInfo.appendChild(currentRegion);
   areaInfo.appendChild(currentRegionInfo)
   areaInfo.setAttribute('class','info-div');
   areaInfo.setAttribute('id', 'info-div')
   defaultZoom.addEventListener('click', (event) => {
-    currentRegion.textContent = 'Current region: Canada'
     map.setOptions({gestureHandling: 'auto'})
     coordInfoWindow.setContent(currentRegion);
     map.setCenter(canadaDefault);
     map.setZoom(4);
     regionZoom = false;
     console.log('regionzoom: ', regionZoom)
-    currentRegion.textcontent = 'Canada';
     currentRegionInfo.textContent = 'Average rent price: 2299'
   })
   
-  map.controls[google.maps.ControlPosition.LEFT_TOP].push(areaInfo);
+  map.controls[google.maps.ControlPosition.TOP_CENTER].push(interfaceContainer);
 }
 
 

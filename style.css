@@ -9,20 +9,30 @@ body{
 }
 .info-div {
     display: flex;
-    background-color: white;
     flex-direction: column;
     justify-content: center;
     align-items: center;
 }
 
-
-#hover-info{
-    pointer-events: none;
-    height: 100vh;
-    width:100%;
-    position: absolute;
-    top: 0;
-    left: 0;
-    z-index: 10;
+.info-div p {
+    color:white;
+    font-size: 0.9rem;
+    font-weight: bold;
+    text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+    margin: 10px;
 }
 
+#interface {
+    display: flex;
+    background-color: rgba(15, 71, 255, 0.233);
+    border: 1px solid black;
+    height: fit-content;
+    width: fit-content;
+    align-items: center;
+    justify-content: center;
+}
+
+#nav-left, #nav-right {
+    font-size: 2rem;
+    margin: 10px;
+}
