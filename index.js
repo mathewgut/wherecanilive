@@ -1,12 +1,15 @@
 let map;
 
+// allows functions to know which region is focused on
+let focusedRegion = ''
+
 // equals true when zoomed on a region, equals false when zoomed out
 let regionZoom = false;
 
 // rinky dinky and super inefficent db
 const regions = {
   ontario: {coord: [44.468994, -78.150035], oneBed: 'value', twoBed: 2638, color:'value', title: 'Ontario', 
-    cities: {toronto: {coord: [43.710820, -79.394462], oneBed: 2443, twoBed: 3198}, mississauga: {coord: [43.595824, -79.652415]}, oneBed: 2364, twoBed: 2764}},
+    cities: {toronto: {coord: [43.710820, -79.394462], oneBed: 2443, twoBed: 3198}, mississauga: {coord: [43.595824, -79.652415], oneBed: 2364, twoBed: 2764}}},
   bColumbia: {coord: [49.396733, -123.419986], oneBed: 'value', twoBed: 2902, color:'value', title: 'British Columbia', 
     cities: {vancouver: {coord: [49.259500, -123.106539], oneBed: 2761, twoBed: 3666}, burnaby: {coord: [49.233502, -122.985689], oneBed: 2566, twoBed: 3184}}},
   alberta: {coord: [52.203687, -113.643362], oneBed: 'value', twoBed: 1986, color:'value', title: 'Alberta', 
@@ -21,6 +24,24 @@ const regions = {
     cities: {montreal: {coord:[45.521425, -73.619292], oneBed: 1756, twoBed: 2295}, gatineau: {coord:[45.451650, -75.698136], oneBed: 1736, twoBed: 1937}}},
 };
 
+// region name list to search
+const createRegionNamesArray = () => {
+  const regionsObject = Object.entries(regions);
+  let namesArray = [];
+  regionsObject.forEach((item)=> namesArray.push(item[1].title));
+  return namesArray;
+} 
+
+// drops a marker with given position and content
+// TODO: places marker even if marker already on position, fix.
+function dropMarker (position, content='lol'){
+  let coord = { lat: position[0], lng: position[1] }
+  console.log(coord)
+  const coordInfoWindow = new google.maps.InfoWindow();
+  coordInfoWindow.setPosition(coord);
+  coordInfoWindow.open(map);
+  coordInfoWindow.setContent(content);
+}
 
 function regionFocus(name){
   let regionObjects = Object.entries(regions);
@@ -28,9 +49,12 @@ function regionFocus(name){
     if(item[1].title == name){
       map.setZoom(6)
       map.setCenter({lat: item[1].coord[0], lng: item[1].coord[1]});
-      currentRegion.textContent = `Current region: ${name}`;
+      //currentRegion.textContent = `Current region: ${name}`;
+      //areaInfo.appendChild(currentRegion)
+      focusedRegion = item[1].title;
       regionZoom = true;
       map.setOptions({gestureHandling: 'none'})
+      dropMarker(item[1].coord, 'Average one bedroom rent: ' + item[1].oneBed + '<br>' + 'Average two bedroom rent: ' + item[1].twoBed)
     }
   })
 }
@@ -82,9 +106,7 @@ const setRegionColor = (place = regions) => {
 
 setRegionColor()
 
-function createPosition (coord){
-  return { lat: coord[0], lng: coord[1] }
-}
+
 
 // async map function, is called based on map events
 async function initMap() {
@@ -109,11 +131,8 @@ async function initMap() {
     scaleControl: true,
   });
   
-  let markerCoord = (lat=56.1304, lng=-106.3468) => new google.maps.LatLng(lat, lng);
   
-  const coordInfoWindow = new google.maps.InfoWindow();
-  coordInfoWindow.setPosition(canadaDefault);
-  coordInfoWindow.open(map);
+  
   
 
   // provincial geojson load
@@ -191,11 +210,7 @@ async function initMap() {
       console.log('title: ',item[1].title,  currentRegion.textContent, 'info: ', cityCost)
       item[1].title == selection ? currentRegionInfo.textContent = cityCost: currentRegion.textcontent = 'Canada';})
       regionFocus(selection);
-      
-      //currentRegion.textContent = `Current region: ${selection}`;
-      
-
-    
+      currentRegion.textContent = `Current region: ${selection}`;
   })
 
   // supporting element creation
@@ -210,11 +225,22 @@ async function initMap() {
   const interfaceContainer = document.createElement('div');
   interfaceContainer.setAttribute('id','interface');
 
+
+
   // create left navigate button
   const navigateLeft = document.createElement('p');
   navigateLeft.setAttribute('id','nav-left');
   navigateLeft.textContent = '<-';
   interfaceContainer.appendChild(navigateLeft);
+  navigateLeft.addEventListener('click',() => {
+    const names = createRegionNamesArray();
+    const currentPosition = names.indexOf(focusedRegion);
+    console.log('left arrow click, current position: ', currentPosition);
+    currentPosition == names.length-1 ? regionFocus(names[0]) : regionFocus(names[currentPosition-1])
+    
+  })
+
+
 
   interfaceContainer.appendChild(areaInfo);
 
@@ -223,6 +249,14 @@ async function initMap() {
   navigateRight.setAttribute('id','nav-right');
   navigateRight.textContent = '->';
   interfaceContainer.appendChild(navigateRight);
+  navigateRight.addEventListener('click',(event)=>{
+    const names = createRegionNamesArray();
+    const currentPosition = names.indexOf(focusedRegion);
+    console.log('right arrow click, current position: ', currentPosition);
+    currentPosition == names.length-1 ? regionFocus(names[0]) : regionFocus(names[currentPosition+1])
+    
+  })
+
 
   areaInfo.appendChild(defaultZoom);
   areaInfo.appendChild(currentRegion);
@@ -231,12 +265,12 @@ async function initMap() {
   areaInfo.setAttribute('id', 'info-div')
   defaultZoom.addEventListener('click', (event) => {
     map.setOptions({gestureHandling: 'auto'})
-    coordInfoWindow.setContent(currentRegion);
     map.setCenter(canadaDefault);
     map.setZoom(4);
     regionZoom = false;
     console.log('regionzoom: ', regionZoom)
     currentRegionInfo.textContent = 'Average rent price: 2299'
+    coordInfoWindow.close()
   })
   
   map.controls[google.maps.ControlPosition.TOP_CENTER].push(interfaceContainer);
