@@ -8,19 +8,19 @@ let regionZoom = false;
 
 // rinky dinky and super inefficent db
 const regions = {
-  bColumbia: {coord: [49.396733, -123.419986], oneBed: 'value', twoBed: 2902, color:'value', title: 'British Columbia', 
+  bColumbia: {coord: [49.396733, -123.419986], oneBed: 'value', twoBed: 2902, color:'value', title: 'British Columbia', window : {},
     cities: {vancouver: {coord: [49.259500, -123.106539], oneBed: 2761, twoBed: 3666}, burnaby: {coord: [49.233502, -122.985689], oneBed: 2566, twoBed: 3184}}},
-  alberta: {coord: [52.203687, -113.643362], oneBed: 'value', twoBed: 1986, color:'value', title: 'Alberta', 
+  alberta: {coord: [52.203687, -113.643362], oneBed: 'value', twoBed: 1986, color:'value', title: 'Alberta', window : {},
     cities: {calgary: {coord: [51.038020, -114.073305], oneBed: 1751, twoBed: 2157}, edmonton: {coord: [53.538191, -113.497395], oneBed: 1389, twoBed: 1789}}},
-  sask: {coord: [51.118269, -105.579977], oneBed: 'value', twoBed: 1432, color:'value', title: 'Saskatchewan',
+  sask: {coord: [51.118269, -105.579977], oneBed: 'value', twoBed: 1432, color:'value', title: 'Saskatchewan', window : {},
     cities: {regina: {coord: [50.450855, -104.618047], oneBed: 1334, twoBed: 1541}, saskatoon: {coord: [52.134032, -106.646741]}}},
-  manitoba: {coord: [50.272672, -98.293368], oneBed: 'value', twoBed: 1781, color:'value', title: 'Manitoba',
+  manitoba: {coord: [50.272672, -98.293368], oneBed: 'value', twoBed: 1781, color:'value', title: 'Manitoba', window : {},
     cities: {winnipeg: {coord: [49.887948, -97.138026], oneBed: 1442, twoBed: 1799}}},
-  ontario: {coord: [51.269352, -86.514159], oneBed: 'value', twoBed: 2638, color:'value', title: 'Ontario', 
+  ontario: {coord: [51.269352, -86.514159], oneBed: 'value', twoBed: 2638, color:'value', title: 'Ontario', window : {},
     cities: {toronto: {coord: [43.710820, -79.394462], oneBed: 2443, twoBed: 3198}, mississauga: {coord: [43.595824, -79.652415], oneBed: 2364, twoBed: 2764}}},
-  quebec: {coord: [51.120750, -72.991588], oneBed: 'value', twoBed: 2159, color:'value', title: 'Quebec', 
+  quebec: {coord: [51.120750, -72.991588], oneBed: 'value', twoBed: 2159, color:'value', title: 'Quebec', window : {},
     cities: {montreal: {coord:[45.521425, -73.619292], oneBed: 1756, twoBed: 2295}, gatineau: {coord:[45.451650, -75.698136], oneBed: 1736, twoBed: 1937}}},
-  nScotia: {coord: [45.0778, -63.5467], oneBed: 'value', twoBed: 2670, color:'value', title: 'Nova Scotia', 
+  nScotia: {coord: [45.0778, -63.5467], oneBed: 'value', twoBed: 2670, color:'value', title: 'Nova Scotia', window : {},
     cities: {halifax: {coord: [44.649121, -63.591530], oneBed: 2050, twoBed: 2506}}},
 };
 
@@ -43,22 +43,28 @@ function dropMarker (position, content='lol'){
   regionInfoWindow.setPosition(coord);
   regionInfoWindow.open(map);
   regionInfoWindow.setContent(content);
+  return regionInfoWindow
 }
 
+// sets default content and parameters for a specified region
 function regionFocus(name){
   let regionObjects = Object.entries(regions);
   regionObjects.forEach((item) => {
     if(item[1].title == name){
       map.setZoom(6)
       map.setCenter({lat: item[1].coord[0], lng: item[1].coord[1]});
-      //currentRegion.textContent = `Current region: ${name}`;
-      //areaInfo.appendChild(currentRegion)
+      // using unupdated focusedRegion value to close last region window
+      regionObjects.forEach((item)=>{
+        item[1].title == focusedRegion ? item[1].window.close() : false; 
+      })
       focusedRegion = item[1].title;
       regionZoom = true;
       map.setOptions({gestureHandling: 'none'})
-      dropMarker(item[1].coord, `<b>${name}</b><br>`+'Average one bedroom rent: ' + item[1].oneBed + '<br>' + 'Average two bedroom rent: ' + item[1].twoBed
-        + '<br>Cities: ' + Object.entries(item[1].cities)
-      )
+      const infoMarker = dropMarker(item[1].coord, `<b>${name}</b><br>`+'One bed: $' + item[1].oneBed + '<br>' + 'Two bed: $' + item[1].twoBed
+        + '<br>Cities: ' + Object.entries(item[1].cities))
+      item[1].window = infoMarker;
+      console.log(`${name} window: `,item[1].window)
+      
     }
   })
 }
@@ -122,7 +128,6 @@ async function initMap() {
   const { Map } = await google.maps.importLibrary("maps");
   const { AdvancedMarkerElement } = await google.maps.importLibrary("marker");
 
-
   //map setup
   map = new Map(document.getElementById("map"), {
     zoom: 4,
@@ -135,10 +140,6 @@ async function initMap() {
     scaleControl: true,
   });
   
-  
-  
-  
-
   // provincial geojson load
   map.data.loadGeoJson(
     "./maps/canada.geojson"
@@ -165,7 +166,7 @@ async function initMap() {
   const hoverInfo = document.createElement('div');
   document.body.appendChild(hoverInfo);
 
-  // if mouse is on map
+  // hover colour state
   map.data.addListener('mouseover', function(event) {
     // store name if over a region (province)
     const selection = event.feature.getProperty("name");
@@ -173,8 +174,7 @@ async function initMap() {
 
     // make object parsable
     const areas = Object.entries(regions);
-    areas.forEach((item,index)=>{
-
+    areas.forEach((item)=>{
       if(regionZoom == true){
         // turn of region fill on hover if zoomed in
         return map.data.overrideStyle(event.feature, {fillOpacity: 0})
@@ -205,7 +205,6 @@ async function initMap() {
  
   });
 
- // over-complicated switch case for when a region(feature) is clicked
  // for each region it will zoom in, set center, and update info text
   map.data.addListener('mouseup', (event) => {
     const selection = event.feature.getProperty("name")
@@ -228,8 +227,6 @@ async function initMap() {
   //interface ui
   const interfaceContainer = document.createElement('div');
   interfaceContainer.setAttribute('id','interface');
-
-
 
   // create left navigate button
   const navigateLeft = document.createElement('button');
@@ -259,7 +256,7 @@ async function initMap() {
     currentPosition == names.length-1 ? regionFocus(names[0]) : regionFocus(names[currentPosition+1])
   })
 
-
+  // legacy info, to be factored out
   areaInfo.appendChild(currentRegion);
   areaInfo.appendChild(currentRegionInfo);
   areaInfo.appendChild(defaultZoom);
@@ -274,6 +271,7 @@ async function initMap() {
     currentRegionInfo.textContent = 'Average rent price: 2299'
   })
   
+  // add elements to map at given position for overlay
   map.controls[google.maps.ControlPosition.TOP_CENTER].push(interfaceContainer);
 }
 
