@@ -1,3 +1,7 @@
+* p {
+    font-size: 16px;
+}
+
 body{
     padding: 0px;
     margin: 0;
@@ -35,4 +39,41 @@ body{
 #nav-left, #nav-right {
     font-size: 2rem;
     margin: 10px;
+}
+
+.window-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.window-container h2 {
+    margin: 0 auto;
+}
+
+.window-container button {
+    margin: 10px 10px 0 0;
+}
+
+#area-details-container {
+    font-size: 1rem;
+}
+
+#area-cities {
+    display: flex;
+    flex-direction: column;
+}
+
+[id^='city']{
+    margin: 10px 10px 0 0;
+    text-decoration: underline;
+    font-weight: bold;
+}
+
+[id^='city']:hover {
+    color: rgb(109, 109, 109);
+}
+
+[id^='city']:active {
+    color: forestgreen;
 }

@@ -1,5 +1,8 @@
 let map;
 
+// default position
+const canadaDefault = { lat: 56.1304, lng: -106.3468 };
+
 // allows functions to know which region is focused on
 let focusedRegion = 'Canada'
 
@@ -69,15 +72,25 @@ function createWindowContent(region){
     const cityName =  item[1].charAt(0).toUpperCase() + item[1].slice(1);
     const city = document.createElement('p');
     city.textContent = cityName;
-    city.setAttribute('class',`city-${item[1]}`)
-    console.log(city)
+    city.setAttribute('id',`city-${item[1]}`)
     areaCities.appendChild(city); 
   })
 
-  areaDetailsContainer.appendChild(areaCities);
+  const backButton = document.createElement('button');
+  backButton.textContent = 'back'
 
+  backButton.addEventListener('click', (event) => {
+    map.setOptions({gestureHandling: 'auto'})
+    map.setCenter(canadaDefault);
+    map.setZoom(4);
+    regionZoom = true;
+    region.window.close()
+  })
+
+  areaDetailsContainer.appendChild(areaCities);
   windowContainer.appendChild(areaName);
   windowContainer.appendChild(areaDetailsContainer);
+  windowContainer.appendChild(backButton);
 
   return windowContainer
 }
@@ -96,18 +109,24 @@ function regionFocus(name){
       focusedRegion = item[1].title;
       regionZoom = true;
       map.setOptions({gestureHandling: 'none'})
-      // create marker with region info
-      //const infoMarker = dropMarker(item[1].coord, `<b>${name}</b><br>`+'One bed: $' + item[1].oneBed + '<br>' + 'Two bed: $' + item[1].twoBed
-      //  + '<br>Cities: ' + Object.entries(item[1].cities))
-      
       const windowContainer = createWindowContent(item[1])
 
       const infoMarker = dropMarker(item[1].coord, windowContainer);
 
       item[1].window = infoMarker;
       console.log(`${name} window: `,item[1].window)
+
+      // this will suffer from a recursive loop. region focus needs to be able to be called on this
+      // move this to another function that relates to the current region
       windowContainer.addEventListener('click',(event) => {
-        console.log(event.id)
+        console.log(event.target.id)
+        if(event.target.id.search('city') != -1){
+          const cityKey = event.target.textContent.toLowerCase();
+          Object.entries(item[1].cities).forEach((city,pos)=>{
+            city[0] == cityKey ? map.setCenter({lat: city[1].coord[0], lng: city[1].coord[1]}) : false;
+            
+          })
+        }
       })
     }
   })
@@ -148,9 +167,6 @@ setRegionColor()
 
 // async map function, is called based on map events
 async function initMap() {
-  
-  // default position on load
-  const canadaDefault = { lat: 56.1304, lng: -106.3468 };
 
   // library import declarations
   const { Map } = await google.maps.importLibrary("maps");
@@ -289,14 +305,7 @@ async function initMap() {
   areaInfo.appendChild(defaultZoom);
   areaInfo.setAttribute('class','info-div');
   areaInfo.setAttribute('id', 'info-div')
-  defaultZoom.addEventListener('click', (event) => {
-    map.setOptions({gestureHandling: 'auto'})
-    map.setCenter(canadaDefault);
-    map.setZoom(4);
-    regionZoom = false;
-    console.log('regionzoom: ', regionZoom)
-    currentRegionInfo.textContent = 'Average rent price: 2299'
-  })
+  
   
   // add elements to map at given position for overlay
   map.controls[google.maps.ControlPosition.TOP_CENTER].push(interfaceContainer);
