@@ -8,13 +8,13 @@ let regionZoom = false;
 
 // rinky dinky and super inefficent db
 const regions = {
-  bColumbia: {coord: [49.396733, -123.419986], oneBed: 'value', twoBed: 2902, color:'value', title: 'British Columbia', window : {},
+  bColumbia: {coord: [54.324821, -124.861467], oneBed: 'value', twoBed: 2902, color:'value', title: 'British Columbia', window : {},
     cities: {vancouver: {coord: [49.259500, -123.106539], oneBed: 2761, twoBed: 3666}, burnaby: {coord: [49.233502, -122.985689], oneBed: 2566, twoBed: 3184}}},
-  alberta: {coord: [52.203687, -113.643362], oneBed: 'value', twoBed: 1986, color:'value', title: 'Alberta', window : {},
+  alberta: {coord: [55.648427, -115.083635], oneBed: 'value', twoBed: 1986, color:'value', title: 'Alberta', window : {},
     cities: {calgary: {coord: [51.038020, -114.073305], oneBed: 1751, twoBed: 2157}, edmonton: {coord: [53.538191, -113.497395], oneBed: 1389, twoBed: 1789}}},
-  sask: {coord: [51.118269, -105.579977], oneBed: 'value', twoBed: 1432, color:'value', title: 'Saskatchewan', window : {},
+  sask: {coord: [54.503829, -105.986955], oneBed: 'value', twoBed: 1432, color:'value', title: 'Saskatchewan', window : {},
     cities: {regina: {coord: [50.450855, -104.618047], oneBed: 1334, twoBed: 1541}, saskatoon: {coord: [52.134032, -106.646741]}}},
-  manitoba: {coord: [50.272672, -98.293368], oneBed: 'value', twoBed: 1781, color:'value', title: 'Manitoba', window : {},
+  manitoba: {coord: [55.636027, -97.022111], oneBed: 'value', twoBed: 1781, color:'value', title: 'Manitoba', window : {},
     cities: {winnipeg: {coord: [49.887948, -97.138026], oneBed: 1442, twoBed: 1799}}},
   ontario: {coord: [51.269352, -86.514159], oneBed: 'value', twoBed: 2638, color:'value', title: 'Ontario', window : {},
     cities: {toronto: {coord: [43.710820, -79.394462], oneBed: 2443, twoBed: 3198}, mississauga: {coord: [43.595824, -79.652415], oneBed: 2364, twoBed: 2764}}},
@@ -46,6 +46,42 @@ function dropMarker (position, content='lol'){
   return regionInfoWindow
 }
 
+function createWindowContent(region){
+  const windowContainer = document.createElement('div');
+  windowContainer.setAttribute('class','window-container');
+  
+  const areaDetailsContainer = document.createElement('div');
+  areaDetailsContainer.setAttribute('id','area-details-container')
+
+  const areaName = document.createElement('h2');
+  areaName.textContent = region.title;
+  areaName.style = (`color: ${region.color};`);
+
+  const areaCost = document.createElement('p');
+  areaCost.textContent = `Two bedroom cost: $${region.twoBed}`;
+  areaDetailsContainer.appendChild(areaCost);
+
+  const areaCities = document.createElement('div');
+  areaCities.setAttribute('id','area-cities');
+  areaCities.textContent = 'Cities:'
+
+  Object.entries(Object.keys(region.cities)).forEach((item, index) => {
+    const cityName =  item[1].charAt(0).toUpperCase() + item[1].slice(1);
+    const city = document.createElement('p');
+    city.textContent = cityName;
+    city.setAttribute('class',`city-${item[1]}`)
+    console.log(city)
+    areaCities.appendChild(city); 
+  })
+
+  areaDetailsContainer.appendChild(areaCities);
+
+  windowContainer.appendChild(areaName);
+  windowContainer.appendChild(areaDetailsContainer);
+
+  return windowContainer
+}
+
 // sets default content and parameters for a specified region
 function regionFocus(name){
   let regionObjects = Object.entries(regions);
@@ -60,11 +96,19 @@ function regionFocus(name){
       focusedRegion = item[1].title;
       regionZoom = true;
       map.setOptions({gestureHandling: 'none'})
-      const infoMarker = dropMarker(item[1].coord, `<b>${name}</b><br>`+'One bed: $' + item[1].oneBed + '<br>' + 'Two bed: $' + item[1].twoBed
-        + '<br>Cities: ' + Object.entries(item[1].cities))
+      // create marker with region info
+      //const infoMarker = dropMarker(item[1].coord, `<b>${name}</b><br>`+'One bed: $' + item[1].oneBed + '<br>' + 'Two bed: $' + item[1].twoBed
+      //  + '<br>Cities: ' + Object.entries(item[1].cities))
+      
+      const windowContainer = createWindowContent(item[1])
+
+      const infoMarker = dropMarker(item[1].coord, windowContainer);
+
       item[1].window = infoMarker;
       console.log(`${name} window: `,item[1].window)
-      
+      windowContainer.addEventListener('click',(event) => {
+        console.log(event.id)
+      })
     }
   })
 }
@@ -73,20 +117,6 @@ function regionFocus(name){
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
-
-// get cursor position in pixels
-function getCursor(event) {
-    let x = event.clientX;
-    let y = event.clientY;
-    let _position = `X: ${x}<br>Y: ${y}`;
-    console.log(_position)
-    /*
-    const infoElement = document.getElementById('info');
-    infoElement.innerHTML = _position;
-    infoElement.style.top = y + "px";
-    infoElement.style.left = (x + 20) + "px";
-    */
-    }
 
 // assign a colour value to each region based off rent cost
 const setRegionColor = (place = regions) => {
@@ -116,14 +146,12 @@ const setRegionColor = (place = regions) => {
 
 setRegionColor()
 
-
-
 // async map function, is called based on map events
 async function initMap() {
   
   // default position on load
   const canadaDefault = { lat: 56.1304, lng: -106.3468 };
-  
+
   // library import declarations
   const { Map } = await google.maps.importLibrary("maps");
   const { AdvancedMarkerElement } = await google.maps.importLibrary("marker");
@@ -184,9 +212,8 @@ async function initMap() {
       }
     }
   )
-  
 });
-
+  
   // turn off fill when mouse not over region
   map.data.addListener('mouseout', event => {
     map.data.overrideStyle(event.feature, {fillOpacity: 0})
@@ -215,7 +242,7 @@ async function initMap() {
       regionFocus(selection);
       currentRegion.textContent = `Current region: ${selection}`;
   })
-
+  
   // supporting element creation
   const areaInfo = document.createElement('div');
   const defaultZoom = document.createElement('button');
