@@ -16,21 +16,23 @@ let focusedRegion = 'Canada'
 let regionZoom = false;
 
 // rinky dinky and super inefficent db
+
+// TODO: all cities now must have a color, title, and window value
 const regions = {
   bColumbia: {coord: [54.324821, -124.861467], oneBed: 'value', twoBed: 2902, color:'value', title: 'British Columbia', window : {},
-    cities: {vancouver: {coord: [49.259500, -123.106539], boundry: './maps/vancouver.geojson' , oneBed: 2761, twoBed: 3666}, burnaby: {coord: [49.233502, -122.985689], oneBed: 2566, twoBed: 3184}}},
+    cities: {vancouver: {coord: [49.259500, -123.106539], boundry: './maps/vancouver.geojson', color: '', window: {}, title: 'Vancouver', oneBed: 2761, twoBed: 3666}, burnaby: {coord: [49.233502, -122.985689], oneBed: 2566, twoBed: 3184}}},
   alberta: {coord: [55.648427, -115.083635], oneBed: 'value', twoBed: 1986, color:'value', title: 'Alberta', window : {},
-    cities: {calgary: {coord: [51.038020, -114.073305], boundry: './maps/calgary.geojson',oneBed: 1751, twoBed: 2157}, edmonton: {coord: [53.538191, -113.497395], oneBed: 1389, twoBed: 1789}}},
+    cities: {calgary: {coord: [51.038020, -114.073305], boundry: './maps/calgary.geojson', color: '', window: {}, title: 'Calgary', oneBed: 1751, twoBed: 2157}, edmonton: {coord: [53.538191, -113.497395], oneBed: 1389, twoBed: 1789}}},
   sask: {coord: [54.503829, -105.986955], oneBed: 'value', twoBed: 1432, color:'value', title: 'Saskatchewan', window : {},
-    cities: {regina: {coord: [50.450855, -104.618047], boundry: './maps/regina.geojson',oneBed: 1334, twoBed: 1541}, saskatoon: {coord: [52.134032, -106.646741]}}},
+    cities: {regina: {coord: [50.450855, -104.618047], boundry: './maps/regina.geojson', color: '', window: {}, title: 'Regina', oneBed: 1334, twoBed: 1541}, saskatoon: {coord: [52.134032, -106.646741]}}},
   manitoba: {coord: [55.636027, -97.022111], oneBed: 'value', twoBed: 1781, color:'value', title: 'Manitoba', window : {},
-    cities: {winnipeg: {coord: [49.887948, -97.138026], boundry: './maps/winnipeg.geojson',oneBed: 1442, twoBed: 1799}}},
+    cities: {winnipeg: {coord: [49.887948, -97.138026], boundry: './maps/winnipeg.geojson', color: '', window: {}, title: 'Winnipeg', oneBed: 1442, twoBed: 1799}}},
   ontario: {coord: [51.269352, -86.514159], oneBed: 'value', twoBed: 2638, color:'value', title: 'Ontario', window : {},
-    cities: {toronto: {coord: [43.710820, -79.394462], boundry: './maps/toronto.geojson', oneBed: 2443, twoBed: 3198}, mississauga: {coord: [43.595824, -79.652415], oneBed: 2364, twoBed: 2764}}},
+    cities: {toronto: {coord: [43.710820, -79.394462], boundry: './maps/toronto.geojson', color: '', window: {}, title: 'Toronto', oneBed: 2443, twoBed: 3198}, mississauga: {coord: [43.595824, -79.652415], oneBed: 2364, twoBed: 2764}}},
   quebec: {coord: [51.120750, -72.991588], oneBed: 'value', twoBed: 2159, color:'value', title: 'Quebec', window : {},
-    cities: {montreal: {coord:[45.521425, -73.619292], boundry: './maps/montreal.geojson',oneBed: 1756, twoBed: 2295}, gatineau: {coord:[45.451650, -75.698136], oneBed: 1736, twoBed: 1937}}},
+    cities: {montreal: {coord:[45.521425, -73.619292], boundry: './maps/montreal.geojson', color: '', window: {}, title: 'Montreal', oneBed: 1756, twoBed: 2295}, gatineau: {coord:[45.451650, -75.698136], oneBed: 1736, twoBed: 1937}}},
   nScotia: {coord: [45.0778, -63.5467], oneBed: 'value', twoBed: 2670, color:'value', title: 'Nova Scotia', window : {},
-    cities: {halifax: {coord: [44.649121, -63.591530], boundry: './maps/halifax.geojson' ,oneBed: 2050, twoBed: 2506}}},
+    cities: {halifax: {coord: [44.649121, -63.591530], boundry: './maps/halifax.geojson', color: '', window: {}, title: 'Halifax', oneBed: 2050, twoBed: 2506}}},
 };
 
 // region name list to search
@@ -42,9 +44,6 @@ const createRegionNamesArray = () => {
 } 
 
 // drops a marker with given position and content
-// TODO: places marker even if marker already on position, fix.
-// solution: add marker property for each region, save marker to it
-// then it can be accessed to be closed. needs reference to close
 function dropMarker (position, content='lol'){
   let coord = { lat: position[0], lng: position[1] }
   const regionInfoWindow = new google.maps.InfoWindow();
@@ -54,7 +53,7 @@ function dropMarker (position, content='lol'){
   return regionInfoWindow
 }
 
-function createRegionWindowContent(region){
+function createRegionWindowContent(region = regions){
   const windowContainer = document.createElement('div');
   windowContainer.setAttribute('class','window-container');
   
@@ -64,10 +63,11 @@ function createRegionWindowContent(region){
   const areaName = document.createElement('h2');
   areaName.textContent = region.title;
  
-
+  // adds an h4 under region name to identify its expensive-ness
   const areaAnalysis = document.createElement('h4');
   const redColorValue = region.color.slice(4).split(',')[0]
   
+  // assigns text based on how red (expensive) the region is
   if(redColorValue > -1 && redColorValue < 50){
     areaAnalysis.textContent = 'Very affordable';
   } else if (redColorValue > 50 && redColorValue < 100){
@@ -89,18 +89,21 @@ function createRegionWindowContent(region){
   areaCost.textContent = `Two bedroom cost: $${region.twoBed}`;
   areaDetailsContainer.appendChild(areaCost);
 
-  const areaCities = document.createElement('div');
-  areaCities.setAttribute('id','area-cities');
-  areaCities.textContent = 'Cities:'
+  if(region.cities != undefined){
+    const areaCities = document.createElement('div');
+    areaCities.setAttribute('id','area-cities');
+    areaCities.textContent = 'Cities:'
 
-  Object.entries(Object.keys(region.cities)).forEach((item, index) => {
-    const cityName =  item[1].charAt(0).toUpperCase() + item[1].slice(1);
-    const city = document.createElement('p');
-    city.textContent = cityName;
-    city.setAttribute('id',`city-${item[1]}`)
-    areaCities.appendChild(city); 
-  })
+    Object.entries(Object.keys(region.cities)).forEach((item, index) => {
+      const cityName =  item[1].charAt(0).toUpperCase() + item[1].slice(1);
+      const city = document.createElement('p');
+      city.textContent = cityName;
+      city.setAttribute('id',`city-${item[1]}`)
+      areaCities.appendChild(city); 
+    })
 
+    areaDetailsContainer.appendChild(areaCities);
+} 
   const backButton = document.createElement('button');
   backButton.textContent = 'back'
 
@@ -113,7 +116,6 @@ function createRegionWindowContent(region){
     activeWindow = false;
   })
 
-  areaDetailsContainer.appendChild(areaCities);
   windowContainer.appendChild(areaName);
   windowContainer.appendChild(areaAnalysis)
   windowContainer.appendChild(areaDetailsContainer);
@@ -156,6 +158,7 @@ function sleep(ms) {
 }
 
 // assign a colour value to each region based off rent cost
+// TODO: refactor for use based off of average income
 const setRegionColor = (place = regions) => {
   // make the object parsable
   const entries = Object.entries(place);
@@ -310,6 +313,7 @@ async function initMap() {
               strokeOpacity: 0.25,
               visible: true,
             })
+            city[1].window = dropMarker(city[1].coord,createRegionWindowContent(city[1]))
             
             map.setOptions({gestureHandling: 'auto'})
             
@@ -318,6 +322,7 @@ async function initMap() {
             cityDataLayer.addListener('click',event =>{
               cityDataLayer.setMap(null)
               regionFocus(focusedRegion);
+              city[1].window.close()
             })
           }
         })
