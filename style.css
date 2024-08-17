@@ -51,6 +51,11 @@ body{
     margin: 0 auto;
 }
 
+.window-container h4 {
+    margin: 0 auto;
+    font-size: 1rem;
+}
+
 .window-container button {
     margin: 10px 10px 0 0;
 }

@@ -3,6 +3,9 @@ let map;
 // bool for triggering event listeners on window
 let activeWindow = false; 
 
+// allows functions to reference current city
+let activeCity = ''
+
 // default position`
 const canadaDefault = { lat: 56.1304, lng: -106.3468 };
 
@@ -60,7 +63,27 @@ function createRegionWindowContent(region){
 
   const areaName = document.createElement('h2');
   areaName.textContent = region.title;
-  areaName.style = (`color: ${region.color};`);
+ 
+
+  const areaAnalysis = document.createElement('h4');
+  const redColorValue = region.color.slice(4).split(',')[0]
+  
+  if(redColorValue > -1 && redColorValue < 50){
+    areaAnalysis.textContent = 'Very affordable';
+  } else if (redColorValue > 50 && redColorValue < 100){
+    areaAnalysis.textContent = 'Affordable';
+  } else if (redColorValue > 100 && redColorValue < 150){
+    areaAnalysis.textContent = 'Not affordable';
+  } else if (redColorValue > 150 && redColorValue < 200){
+    areaAnalysis.textContent = 'Expensive';
+    areaAnalysis.style = ('font-weight: bold;')
+  } else {
+    areaAnalysis.textContent = 'EXTREMELY EXPENSIVE'
+    areaAnalysis.style = ('font-weight: bolder; font-size: 1.1rem')
+  }
+
+  areaAnalysis.style = (`color: ${region.color};`);
+  
 
   const areaCost = document.createElement('p');
   areaCost.textContent = `Two bedroom cost: $${region.twoBed}`;
@@ -92,6 +115,7 @@ function createRegionWindowContent(region){
 
   areaDetailsContainer.appendChild(areaCities);
   windowContainer.appendChild(areaName);
+  windowContainer.appendChild(areaAnalysis)
   windowContainer.appendChild(areaDetailsContainer);
   windowContainer.appendChild(backButton);
 
@@ -153,8 +177,6 @@ const setRegionColor = (place = regions) => {
 
     item[1].color = `rgb(${clampedRed}, 0, ${clampedBlue})`;
   });
-  
- 
 };
 
 setRegionColor()
@@ -197,7 +219,6 @@ async function initMap() {
         map.data.setStyle(() => {
           return {
             strokeOpacity: zoomLevel < 10 ? 0.4 : 0.7,
-            
           };
        });
   });
@@ -346,8 +367,6 @@ async function initMap() {
   })
 
  
-  
-  
 
   // legacy info, to be factored out
   areaInfo.appendChild(currentRegion);
