@@ -16,8 +16,8 @@ let focusedRegion = 'Canada'
 let regionZoom = false;
 
 // rinky dinky and super inefficent db
-
 // TODO: all cities now must have a color, title, and window value
+// so drop marker can be placed for cities
 const regions = {
   bColumbia: {coord: [54.324821, -124.861467], oneBed: 'value', twoBed: 2902, color:'value', title: 'British Columbia', window : {},
     cities: {vancouver: {coord: [49.259500, -123.106539], boundry: './maps/vancouver.geojson', color: '', window: {}, title: 'Vancouver', oneBed: 2761, twoBed: 3666}, burnaby: {coord: [49.233502, -122.985689], oneBed: 2566, twoBed: 3184}}},
@@ -39,7 +39,7 @@ const regions = {
 const createRegionNamesArray = () => {
   const regionsObject = Object.entries(regions);
   let namesArray = [];
-  regionsObject.forEach(item=> namesArray.push(item[1].title));
+  regionsObject.forEach(item => namesArray.push(item[1].title));
   return namesArray;
 } 
 
@@ -53,7 +53,7 @@ function dropMarker (position, content='lol'){
   return regionInfoWindow
 }
 
-function createRegionWindowContent(region = regions){
+function setWindowContent(region = regions){
   const windowContainer = document.createElement('div');
   windowContainer.setAttribute('class','window-container');
   
@@ -142,7 +142,7 @@ function regionFocus(name){
       focusedRegion = item[1].title;
       regionZoom = true;
       map.setOptions({gestureHandling: 'none'})
-      const windowContainer = createRegionWindowContent(item[1])
+      const windowContainer = setWindowContent(item[1])
 
       const infoMarker = dropMarker(item[1].coord, windowContainer);
 
@@ -313,7 +313,7 @@ async function initMap() {
               strokeOpacity: 0.25,
               visible: true,
             })
-            city[1].window = dropMarker(city[1].coord,createRegionWindowContent(city[1]))
+            city[1].window = dropMarker(city[1].coord,setWindowContent(city[1]))
             
             map.setOptions({gestureHandling: 'auto'})
             
