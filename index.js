@@ -4,13 +4,13 @@ let map;
 let activeWindow = false; 
 
 // allows functions to reference current city
-let activeCity = ''
+let activeCity = '';
 
 // default position`
 const canadaDefault = { lat: 56.1304, lng: -106.3468 };
 
 // allows functions to know which region is focused on
-let focusedRegion = 'Canada'
+let focusedRegion = 'Canada';
 
 // equals true when zoomed on a region, equals false when zoomed out
 let regionZoom = false;
@@ -19,21 +19,27 @@ let regionZoom = false;
 // TODO: all cities now must have a color, title, and window value
 // so drop marker can be placed for cities
 const regions = {
-  bColumbia: {coord: [54.324821, -124.861467], oneBed: 'value', twoBed: 2902, color:'value', title: 'British Columbia', window : {},
+  bColumbia: {coord: [54.324821, -124.861467], oneBed: '2304', twoBed: 2902, color:'value', title: 'British Columbia', window : {},
     cities: {vancouver: {coord: [49.259500, -123.106539], boundry: './maps/vancouver.geojson', color: '', window: {}, title: 'Vancouver', oneBed: 2761, twoBed: 3666}, burnaby: {coord: [49.233502, -122.985689], oneBed: 2566, twoBed: 3184}}},
-  alberta: {coord: [55.648427, -115.083635], oneBed: 'value', twoBed: 1986, color:'value', title: 'Alberta', window : {},
+  alberta: {coord: [55.648427, -115.083635], oneBed: '1620', twoBed: 1986, color:'value', title: 'Alberta', window : {},
     cities: {calgary: {coord: [51.038020, -114.073305], boundry: './maps/calgary.geojson', color: '', window: {}, title: 'Calgary', oneBed: 1751, twoBed: 2157}, edmonton: {coord: [53.538191, -113.497395], oneBed: 1389, twoBed: 1789}}},
-  sask: {coord: [54.503829, -105.986955], oneBed: 'value', twoBed: 1432, color:'value', title: 'Saskatchewan', window : {},
+  sask: {coord: [54.503829, -105.986955], oneBed: '1235', twoBed: 1432, color:'value', title: 'Saskatchewan', window : {},
     cities: {regina: {coord: [50.450855, -104.618047], boundry: './maps/regina.geojson', color: '', window: {}, title: 'Regina', oneBed: 1334, twoBed: 1541}, saskatoon: {coord: [52.134032, -106.646741]}}},
-  manitoba: {coord: [55.636027, -97.022111], oneBed: 'value', twoBed: 1781, color:'value', title: 'Manitoba', window : {},
+  manitoba: {coord: [55.636027, -97.022111], oneBed: '1436', twoBed: 1781, color:'value', title: 'Manitoba', window : {},
     cities: {winnipeg: {coord: [49.887948, -97.138026], boundry: './maps/winnipeg.geojson', color: '', window: {}, title: 'Winnipeg', oneBed: 1442, twoBed: 1799}}},
-  ontario: {coord: [51.269352, -86.514159], oneBed: 'value', twoBed: 2638, color:'value', title: 'Ontario', window : {},
+  ontario: {coord: [51.269352, -86.514159], oneBed: '2189', twoBed: 2638, color:'value', title: 'Ontario', window : {},
     cities: {toronto: {coord: [43.710820, -79.394462], boundry: './maps/toronto.geojson', color: '', window: {}, title: 'Toronto', oneBed: 2443, twoBed: 3198}, mississauga: {coord: [43.595824, -79.652415], oneBed: 2364, twoBed: 2764}}},
-  quebec: {coord: [51.120750, -72.991588], oneBed: 'value', twoBed: 2159, color:'value', title: 'Quebec', window : {},
+  quebec: {coord: [51.120750, -72.991588], oneBed: '1714', twoBed: 2159, color:'value', title: 'Quebec', window : {},
     cities: {montreal: {coord:[45.521425, -73.619292], boundry: './maps/montreal.geojson', color: '', window: {}, title: 'Montreal', oneBed: 1756, twoBed: 2295}, gatineau: {coord:[45.451650, -75.698136], oneBed: 1736, twoBed: 1937}}},
-  nScotia: {coord: [45.0778, -63.5467], oneBed: 'value', twoBed: 2670, color:'value', title: 'Nova Scotia', window : {},
+  nScotia: {coord: [45.0778, -63.5467], oneBed: '2034', twoBed: 2670, color:'value', title: 'Nova Scotia', window : {},
     cities: {halifax: {coord: [44.649121, -63.591530], boundry: './maps/halifax.geojson', color: '', window: {}, title: 'Halifax', oneBed: 2050, twoBed: 2506}}},
 };
+
+// replace with jquery csv parsing
+const income = {
+  student: 15600 + 4200,
+  working: 55300,
+}
 
 // region name list to search
 const createRegionNamesArray = () => {
@@ -159,7 +165,7 @@ function sleep(ms) {
 
 // assign a colour value to each region based off rent cost
 // TODO: refactor for use based off of average income
-const setRegionColor = (place = regions) => {
+const setRelativeRegionColor = (place = regions) => {
   // make the object parsable
   const entries = Object.entries(place);
 
@@ -182,7 +188,61 @@ const setRegionColor = (place = regions) => {
   });
 };
 
-setRegionColor()
+const setProportionalRegionColor = (place = regions, medianIncome = income.student) => {
+  place = Object.entries(place);
+  const fraction = 255 / 6;
+  
+  const monthlyMedianIncome = medianIncome / 12;
+  console.log('monthly income', monthlyMedianIncome)
+  let colorPosition = 0;
+
+  // refactor to get rid of duplicate code
+  place.forEach((item) => {
+    if(medianIncome == income.student){
+      
+      const proportionalCost = item[1].oneBed / monthlyMedianIncome
+      console.log(item[0],': ',proportionalCost)
+      
+      proportionalCost < 0.2 ? colorPosition = 1 : false;
+      proportionalCost < 0.35 ? colorPosition = 2 : false;
+      proportionalCost > 0.35 && proportionalCost < 0.5 ? colorPosition = 3 : false;
+      proportionalCost > 0.5 && proportionalCost < 0.75 ? colorPosition = 4 : false;
+      proportionalCost > 0.75 && proportionalCost < 1 ? colorPosition = 5 : false;
+      proportionalCost > 1 ? colorPosition = 6 : false;
+      
+      const redValue = Math.round(fraction * colorPosition);
+      const blueValue = 255 - Math.round(fraction * colorPosition);
+      const clampedRed = Math.min(255, Math.max(0, redValue));
+      const clampedBlue = Math.min(255, Math.max(0, blueValue));
+
+      item[1].color = `rgb(${clampedRed}, 0, ${clampedBlue})`;
+    
+
+    }
+    else{
+      const proportionalCost = item[1].twoBed / monthlyMedianIncome
+      console.log(item[0],': ',proportionalCost)
+      
+      proportionalCost < 0.2 ? colorPosition = 1 : false;
+      proportionalCost < 0.35 ? colorPosition = 2 : false;
+      proportionalCost > 0.35 && proportionalCost < 0.5 ? colorPosition = 3 : false;
+      proportionalCost > 0.5 && proportionalCost < 0.75 ? colorPosition = 4 : false;
+      proportionalCost > 0.75 && proportionalCost < 1 ? colorPosition = 5 : false;
+      proportionalCost > 1 ? colorPosition = 6 : false;
+      
+      const redValue = Math.round(fraction * colorPosition);
+      const blueValue = 255 - Math.round(fraction * colorPosition);
+      const clampedRed = Math.min(255, Math.max(0, redValue));
+      const clampedBlue = Math.min(255, Math.max(0, blueValue));
+
+      item[1].color = `rgb(${clampedRed}, 0, ${clampedBlue})`;
+    }
+  })
+}
+
+//setProportionalRegionColor(regions,income.student)
+
+setRelativeRegionColor()
 
 // async map function, is called based on map events
 async function initMap() {
@@ -330,7 +390,7 @@ async function initMap() {
   };
 })
 
-  
+ 
   // supporting element creation
   const areaInfo = document.createElement('div');
   const defaultZoom = document.createElement('button');
@@ -342,6 +402,32 @@ async function initMap() {
   //interface ui
   const interfaceContainer = document.createElement('div');
   interfaceContainer.setAttribute('id','interface');
+
+  // data toggle container
+  const dataControlContainer = document.createElement('div');
+  dataControlContainer.setAttribute('id','data-control-container');
+  
+  // data toggle
+  const switchLabel = document.createElement('label');
+  switchLabel.setAttribute('class', 'switch');
+  
+  const switchCheckBox = document.createElement("INPUT");
+  switchCheckBox.setAttribute("type", "checkbox");
+  
+  const switchSlider = document.createElement('span');
+  switchSlider.setAttribute('class','slider round');
+
+  const dataToggleTypeText = document.createElement('p');
+  dataToggleTypeText.innerText = 'Relative//Proportional';
+
+
+  dataControlContainer.appendChild(switchLabel);
+  dataControlContainer.appendChild(dataToggleTypeText);
+  switchLabel.appendChild(switchCheckBox);
+  switchLabel.appendChild(switchSlider);
+  
+
+  
 
   // create left navigate button
   const navigateLeft = document.createElement('button');
@@ -374,15 +460,17 @@ async function initMap() {
  
 
   // legacy info, to be factored out
-  areaInfo.appendChild(currentRegion);
+  //areaInfo.appendChild(currentRegion);
   areaInfo.appendChild(currentRegionInfo);
-  areaInfo.appendChild(defaultZoom);
+  //areaInfo.appendChild(defaultZoom);
   areaInfo.setAttribute('class','info-div');
   areaInfo.setAttribute('id', 'info-div')
   
   
   // add elements to map at given position for overlay
   map.controls[google.maps.ControlPosition.TOP_CENTER].push(interfaceContainer);
+  map.controls[google.maps.ControlPosition.BOTTOM_CENTER].push(dataControlContainer)
+
 }
 
 
