@@ -196,53 +196,71 @@ const setProportionalRegionColor = (place = regions, medianIncome = income.stude
   console.log('monthly income', monthlyMedianIncome)
   let colorPosition = 0;
 
-  // refactor to get rid of duplicate code
   place.forEach((item) => {
-    if(medianIncome == income.student){
-      
-      const proportionalCost = item[1].oneBed / monthlyMedianIncome
-      console.log(item[0],': ',proportionalCost)
-      
-      proportionalCost < 0.2 ? colorPosition = 1 : false;
-      proportionalCost < 0.35 ? colorPosition = 2 : false;
-      proportionalCost > 0.35 && proportionalCost < 0.5 ? colorPosition = 3 : false;
-      proportionalCost > 0.5 && proportionalCost < 0.75 ? colorPosition = 4 : false;
-      proportionalCost > 0.75 && proportionalCost < 1 ? colorPosition = 5 : false;
-      proportionalCost > 1 ? colorPosition = 6 : false;
-      
-      const redValue = Math.round(fraction * colorPosition);
-      const blueValue = 255 - Math.round(fraction * colorPosition);
-      const clampedRed = Math.min(255, Math.max(0, redValue));
-      const clampedBlue = Math.min(255, Math.max(0, blueValue));
+    let proportionalCost = 0;
+    medianIncome == income.student ? proportionalCost = item[1].oneBed / monthlyMedianIncome : proportionalCost = item[1].twoBed / monthlyMedianIncome
 
-      item[1].color = `rgb(${clampedRed}, 0, ${clampedBlue})`;
-    
-
-    }
-    else{
-      const proportionalCost = item[1].twoBed / monthlyMedianIncome
-      console.log(item[0],': ',proportionalCost)
+    console.log(item[0],': ',proportionalCost)
       
-      proportionalCost < 0.2 ? colorPosition = 1 : false;
-      proportionalCost < 0.35 ? colorPosition = 2 : false;
-      proportionalCost > 0.35 && proportionalCost < 0.5 ? colorPosition = 3 : false;
-      proportionalCost > 0.5 && proportionalCost < 0.75 ? colorPosition = 4 : false;
-      proportionalCost > 0.75 && proportionalCost < 1 ? colorPosition = 5 : false;
-      proportionalCost > 1 ? colorPosition = 6 : false;
+    proportionalCost < 0.2 ? colorPosition = 1 : false;
+    proportionalCost < 0.35 ? colorPosition = 2 : false;
+    proportionalCost > 0.35 && proportionalCost < 0.5 ? colorPosition = 3 : false;
+    proportionalCost > 0.5 && proportionalCost < 0.75 ? colorPosition = 4 : false;
+    proportionalCost > 0.75 && proportionalCost < 1 ? colorPosition = 5 : false;
+    proportionalCost > 1 ? colorPosition = 6 : false;
       
-      const redValue = Math.round(fraction * colorPosition);
-      const blueValue = 255 - Math.round(fraction * colorPosition);
-      const clampedRed = Math.min(255, Math.max(0, redValue));
-      const clampedBlue = Math.min(255, Math.max(0, blueValue));
+    const redValue = Math.round(fraction * colorPosition);
+    const blueValue = 255 - Math.round(fraction * colorPosition);
+    const clampedRed = Math.min(255, Math.max(0, redValue));
+    const clampedBlue = Math.min(255, Math.max(0, blueValue));
 
-      item[1].color = `rgb(${clampedRed}, 0, ${clampedBlue})`;
-    }
+    item[1].color = `rgb(${clampedRed}, 0, ${clampedBlue})`;
   })
 }
 
-//setProportionalRegionColor(regions,income.student)
+setProportionalRegionColor();
 
-setRelativeRegionColor()
+
+// data toggle container
+const dataControlContainer = document.createElement('div');
+dataControlContainer.setAttribute('id','data-control-container');
+  
+// data toggle
+const switchLabel = document.createElement('label');
+switchLabel.setAttribute('class', 'switch');
+  
+const switchCheckBox = document.createElement("INPUT");
+switchCheckBox.setAttribute('type', 'checkbox');
+switchCheckBox.setAttribute('id', 'switch-check');
+  
+const switchSlider = document.createElement('span');
+switchSlider.setAttribute('class','slider round');
+
+const dataToggleTypeText = document.createElement('p');
+dataToggleTypeText.innerText = 'Relative//Proportional';
+
+
+// for this to work, need to override the style for each colour
+switchCheckBox.addEventListener('click', e => {
+  console.log(e.target.checked, e.target.id)
+  if (e.target.checked){
+    setProportionalRegionColor();
+    console.log('checked')
+  }
+  else{
+    setProportionalRegionColor(income.working)
+  }
+      
+})
+
+
+  dataControlContainer.appendChild(switchLabel);
+  dataControlContainer.appendChild(dataToggleTypeText);
+  switchLabel.appendChild(switchCheckBox);
+  switchLabel.appendChild(switchSlider);
+  
+
+
 
 // async map function, is called based on map events
 async function initMap() {
@@ -403,31 +421,7 @@ async function initMap() {
   const interfaceContainer = document.createElement('div');
   interfaceContainer.setAttribute('id','interface');
 
-  // data toggle container
-  const dataControlContainer = document.createElement('div');
-  dataControlContainer.setAttribute('id','data-control-container');
-  
-  // data toggle
-  const switchLabel = document.createElement('label');
-  switchLabel.setAttribute('class', 'switch');
-  
-  const switchCheckBox = document.createElement("INPUT");
-  switchCheckBox.setAttribute("type", "checkbox");
-  
-  const switchSlider = document.createElement('span');
-  switchSlider.setAttribute('class','slider round');
 
-  const dataToggleTypeText = document.createElement('p');
-  dataToggleTypeText.innerText = 'Relative//Proportional';
-
-
-  dataControlContainer.appendChild(switchLabel);
-  dataControlContainer.appendChild(dataToggleTypeText);
-  switchLabel.appendChild(switchCheckBox);
-  switchLabel.appendChild(switchSlider);
-  
-
-  
 
   // create left navigate button
   const navigateLeft = document.createElement('button');
@@ -456,7 +450,7 @@ async function initMap() {
     console.log('right arrow click, current position: ', currentPosition);
     currentPosition == names.length-1 ? regionFocus(names[0]) : regionFocus(names[currentPosition+1])
   })
-
+  console.log()
  
 
   // legacy info, to be factored out

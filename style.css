@@ -71,6 +71,10 @@ body{
     flex-direction: column;
 }
 
+#data-control-container {
+    display: flex;
+}
+
 [id^='city']{
     margin: 10px 10px 0 0;
     text-decoration: underline;
