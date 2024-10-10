@@ -18,7 +18,7 @@ let regionZoom = false;
 // rinky dinky and super inefficent db
 // TODO: all cities now must have a color, title, and window value
 // so drop marker can be placed for cities
-const regions = {
+let regions = {
   bColumbia: {coord: [54.324821, -124.861467], oneBed: '2304', twoBed: 2902, color:'value', title: 'British Columbia', window : {},
     cities: {vancouver: {coord: [49.259500, -123.106539], boundry: './maps/vancouver.geojson', color: '', window: {}, title: 'Vancouver', oneBed: 2761, twoBed: 3666}, burnaby: {coord: [49.233502, -122.985689], oneBed: 2566, twoBed: 3184}}},
   alberta: {coord: [55.648427, -115.083635], oneBed: '1620', twoBed: 1986, color:'value', title: 'Alberta', window : {},
@@ -218,46 +218,13 @@ const setProportionalRegionColor = (place = regions, medianIncome = income.stude
   })
 }
 
-setProportionalRegionColor();
+//setProportionalRegionColor();
+setRelativeRegionColor();
 
 
 // data toggle container
 const dataControlContainer = document.createElement('div');
 dataControlContainer.setAttribute('id','data-control-container');
-  
-// data toggle
-const switchLabel = document.createElement('label');
-switchLabel.setAttribute('class', 'switch');
-  
-const switchCheckBox = document.createElement("INPUT");
-switchCheckBox.setAttribute('type', 'checkbox');
-switchCheckBox.setAttribute('id', 'switch-check');
-  
-const switchSlider = document.createElement('span');
-switchSlider.setAttribute('class','slider round');
-
-const dataToggleTypeText = document.createElement('p');
-dataToggleTypeText.innerText = 'Relative//Proportional';
-
-
-// for this to work, need to override the style for each colour
-switchCheckBox.addEventListener('click', e => {
-  console.log(e.target.checked, e.target.id)
-  if (e.target.checked){
-    setProportionalRegionColor();
-    console.log('checked')
-  }
-  else{
-    setProportionalRegionColor(income.working)
-  }
-      
-})
-
-
-  dataControlContainer.appendChild(switchLabel);
-  dataControlContainer.appendChild(dataToggleTypeText);
-  switchLabel.appendChild(switchCheckBox);
-  switchLabel.appendChild(switchSlider);
   
 
 
@@ -281,10 +248,17 @@ async function initMap() {
     scaleControl: true,
   });
   
+  let featureArray = []
+
   // provincial geojson load
-  map.data.loadGeoJson(
-    "./maps/canada.geojson"
-  )
+  let featureLoad = map.data.loadGeoJson(
+    "./maps/canada.geojson", {} , features => {
+    map.data.forEach(f => {
+      console.log('feature: ',f);
+      featureArray.push(f);
+    })
+    return featureArray;
+})
 
   // set default styles for provinces
   map.data.setStyle({
@@ -407,7 +381,6 @@ async function initMap() {
       }
   };
 })
-
  
   // supporting element creation
   const areaInfo = document.createElement('div');
@@ -421,7 +394,72 @@ async function initMap() {
   const interfaceContainer = document.createElement('div');
   interfaceContainer.setAttribute('id','interface');
 
+  // data toggle
+  const switchLabel = document.createElement('label');
+  switchLabel.setAttribute('class', 'switch');
+    
+  const switchCheckBox = document.createElement("INPUT");
+  switchCheckBox.setAttribute('type', 'checkbox');
+  switchCheckBox.setAttribute('id', 'switch-check');
+    
+  const switchSlider = document.createElement('span');
+  switchSlider.setAttribute('class','slider round');
 
+  const dataToggleTypeText = document.createElement('p');
+  dataToggleTypeText.innerText = 'Relative//Proportional';
+
+  // for this to work, need to override the style for each colour
+  // for some reason it only works once the switch is turned on, then off
+  // its because the entries aren't mutable. so when we go to change the colour, 
+  // we have to then resave it to the object, so we can then access it.
+  
+  function regionColorArray (){ 
+    let colorArray = [];
+    Object.entries(regions).forEach((item, index) => {
+      const provinceColorStr = `${item[1].title}: ${item[1].color}`;
+      colorArray.push(provinceColorStr);
+    
+    })
+    return colorArray;
+  }
+
+// refactor and figure out wtf is happening
+  switchCheckBox.addEventListener('click', e => {
+    console.log(e.target.checked, e.target.id);
+    if (e.target.checked){
+      setProportionalRegionColor(income.working);
+      console.log('checked');
+      featureArray.forEach((f, fIndex) => {
+        const regionEntries = Object.entries(regions);
+        regionEntries.forEach((item, rIndex) => {
+          if (item[1].title == f.Fg.name){
+            map.data.overrideStyle(featureArray[fIndex], {strokeColor: item[1].color});
+            console.log('match', item[1].title, f.Fg.name, 'color:', item[1].color );
+          } 
+        })
+      })
+      console.log(regionColorArray())
+    }
+    else if (!e.target.checked){
+      setRelativeRegionColor();
+      featureArray.forEach((f, fIndex) => {
+        const regionEntries = Object.entries(regions);
+        regionEntries.forEach((item, rIndex) => {
+          //console.log('colour change condition: ', item[1].title == f.Fg.name)
+          if (item[1].title == f.Fg.name){
+            map.data.overrideStyle(featureArray[rIndex], {strokeColor: item[1].color})
+            console.log('match', item[1].title, f.Fg.name, 'color:', item[1].color )
+          } 
+        })
+      })
+      console.log(regionColorArray())
+    }
+  })
+
+  dataControlContainer.appendChild(switchLabel);
+  dataControlContainer.appendChild(dataToggleTypeText);
+  switchLabel.appendChild(switchCheckBox);
+  switchLabel.appendChild(switchSlider);
 
   // create left navigate button
   const navigateLeft = document.createElement('button');
