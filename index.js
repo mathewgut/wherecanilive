@@ -221,7 +221,6 @@ const setProportionalRegionColor = (place = regions, medianIncome = income.stude
 //setProportionalRegionColor();
 setRelativeRegionColor();
 
-
 // data toggle container
 const dataControlContainer = document.createElement('div');
 dataControlContainer.setAttribute('id','data-control-container');
